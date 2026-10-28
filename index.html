@@ -191,6 +191,31 @@
   .who-item p{font-size:15px;color:var(--muted);margin:0}
 
 
+
+  /* Video hero variant (Webflow: native Background Video element, upload MP4 under 30MB; it adds its own pause button) */
+  .hero-video{position:absolute;inset:0;display:none;z-index:0}
+  .hero-video video{width:100%;height:100%;object-fit:cover}
+  .hero-video::after{content:"";position:absolute;inset:0;background:linear-gradient(95deg,rgba(20,22,18,.9) 0%,rgba(20,22,18,.72) 45%,rgba(20,22,18,.35) 100%)}
+  .hero .wrap{z-index:1}
+  .hero.is-video::before{display:none}
+  .hero.is-video .hero-video{display:block}
+  .hero.is-video .carousel{display:none}
+  .hero.is-video .wrap{grid-template-columns:1fr;min-height:min(80vh,760px);align-content:center}
+  .hero.is-video .wrap > div:first-child{max-width:720px}
+  .video-toggle{position:absolute;right:24px;bottom:24px;z-index:2;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.45);background:rgba(20,22,18,.35);backdrop-filter:blur(6px);color:#fff;display:none;place-items:center;cursor:pointer}
+  .video-toggle:hover{background:rgba(255,255,255,.15)}
+  .video-toggle svg{width:16px;height:16px}
+  .hero.is-video .video-toggle{display:grid}
+  .video-toggle .i-play{display:none}
+  .video-toggle.paused .i-play{display:block}
+  .video-toggle.paused .i-pause{display:none}
+
+  /* Mockup-only switcher (remove before build) */
+  .mock-switch{position:fixed;left:16px;bottom:16px;z-index:200;display:flex;align-items:center;gap:4px;background:rgba(20,22,18,.92);color:#fff;padding:5px 5px 5px 14px;border-radius:100px;font:500 12px var(--body);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .mock-switch span{opacity:.7;margin-right:6px;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+  .mock-switch button{border:0;background:none;color:#fff;font:inherit;padding:7px 12px;border-radius:100px;cursor:pointer}
+  .mock-switch button[aria-pressed="true"]{background:var(--sage-btn)}
+
   /* Team (Webflow: CMS "Team Members" collection list, horizontal scroll-snap + small arrow script) */
   .team{overflow:hidden}
   .team-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:48px}
@@ -308,6 +333,8 @@
 </head>
 <body>
 
+<div class="mock-switch" role="group" aria-label="Mockup hero version"><span>Hero</span><button data-hero="video" aria-pressed="true">Video</button><button data-hero="carousel" aria-pressed="false">Carousel</button></div>
+
 <div class="topbar">
   <a href="#contact">Free discovery call for business owners: cut taxes, grow wealth<span>Book now &rarr;</span></a>
 </div>
@@ -334,7 +361,17 @@
 <main id="top">
 
   <!-- HERO -->
-  <section class="hero" aria-labelledby="hero-title">
+  <section class="hero is-video" aria-labelledby="hero-title">
+    <div class="hero-video" aria-hidden="true">
+      <!-- Sample footage: Pexels, Kampus Production, "People Shaking Hands in a Meeting" (free license). Replace with client footage. -->
+      <video muted loop playsinline preload="metadata" poster="https://cdn.prod.website-files.com/6875eab98b7b947e57b3018b/687611428dc9a5ca84f3cde6_hero-banner.avif">
+        <source src="https://videos.pexels.com/video-files/8170609/8170609-hd_1280_720_25fps.mp4" type="video/mp4">
+      </video>
+    </div>
+    <button class="video-toggle" aria-label="Pause background video">
+      <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>
+    </button>
     <div class="wrap">
       <div>
       <div class="eyebrow">For business owners netting $400K+</div>
@@ -751,6 +788,30 @@
     track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
     addEventListener('resize', update);
     update();
+  })();
+  // Video hero: autoplay unless reduced motion, pause button, and mockup switcher
+  (() => {
+    const hero = document.querySelector('.hero');
+    const video = hero.querySelector('.hero-video video');
+    const btn = hero.querySelector('.video-toggle');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let userPaused = reduced;
+    const sync = () => {
+      const paused = video.paused;
+      btn.classList.toggle('paused', paused);
+      btn.setAttribute('aria-label', paused ? 'Play background video' : 'Pause background video');
+    };
+    const tryPlay = () => { if (!userPaused && hero.classList.contains('is-video')) video.play().catch(() => {}).finally(sync); else sync(); };
+    btn.addEventListener('click', () => { if (video.paused) { userPaused = false; video.play().finally(sync); } else { userPaused = true; video.pause(); sync(); } });
+    video.addEventListener('play', sync); video.addEventListener('pause', sync);
+    const setHero = (mode) => {
+      hero.classList.toggle('is-video', mode === 'video');
+      document.querySelectorAll('.mock-switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.hero === mode));
+      if (mode === 'video') tryPlay(); else video.pause();
+      history.replaceState(null, '', '#' + mode + '-hero');
+    };
+    document.querySelectorAll('.mock-switch button').forEach(b => b.addEventListener('click', () => setHero(b.dataset.hero)));
+    setHero(location.hash === '#carousel-hero' ? 'carousel' : 'video');
   })();
 </script>
 </body>
