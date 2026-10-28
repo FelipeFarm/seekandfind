@@ -522,3 +522,9 @@ a.contact-card:hover{border-color:var(--sage)}
 }
 .contact-grid > *,.contact-card > span{min-width:0}
 .contact-card strong{overflow-wrap:anywhere}
+
+/* Mockup-only hero switcher (remove before build) */
+.mock-switch{position:fixed;left:16px;bottom:16px;z-index:200;display:flex;align-items:center;gap:4px;background:rgba(20,22,18,.92);color:#fff;padding:5px 5px 5px 14px;border-radius:100px;font:500 12px var(--body);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.mock-switch span{opacity:.7;margin-right:6px;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+.mock-switch button{border:0;background:none;color:#fff;font:inherit;padding:7px 12px;border-radius:100px;cursor:pointer}
+.mock-switch button[aria-pressed="true"]{background:var(--sage-btn)}
